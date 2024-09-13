@@ -65,44 +65,13 @@
         </p>
 
         <pre>
-        <code class="python">
-def channel_division(img): 
-    channel_height = img.shape[0] // 3
-    b = img[:channel_height] 
-    g = img[channel_height: 2*channel_height] 
-    r = img[2*channel_height:3*channel_height]
-    return b, g, r 
-        </code>
+
         </pre>
         
         <h3>Aligning:</h3>
         <h4>Aligning raw pixels: </h4>
         <p> I used window size of 15 to loop through a horizontal/vertical transformations of (-15, 15) for each red/green channel to blue. By doing so, I tried to find the best offset (shift) that can get us the minimized error. 
         </p>
-
-        <pre>
-            <code class="python">
-def align_one(to_align, label, window_size=15):
-    min_error = np.inf
-    best_shift = (0,0) 
-
-    vcut = to_align.shape[0] // 8
-    hcut = to_align.shape[1] // 8
-
-    for x in range(-window_size, window_size): 
-        for y in range(-window_size, window_size): 
-
-            rolled = roll(to_align, x, y) 
-            curr_error = euclidean(label[vcut:-vcut, hcut:-hcut], rolled[vcut:-vcut, hcut:-hcut])
-            if curr_error < min_error: 
-                min_error = curr_error 
-                best_shift = (x, y) 
-    
-    aligned = roll(to_align, *best_shift) 
-
-    return np.array(best_shift), aligned
-            </code>
-        </pre>
 
         <p>
             This exhaustive search of "double for loop" is extremely inefficient to large .tif images which are quiet large in size. Thus, I used <b>image pyramids</b> instead. 
@@ -131,23 +100,7 @@ def align_one(to_align, label, window_size=15):
             which results in dark pixels in some channels (red) and light pixels in others (blue). To address this, I used edge detection with skimage’ roberts filters, which improved alignment accuracy for “emir.tif.”
             I discovered that roberts filter improved visual accuracy in all images.
         </p>
-        <pre>
-            <code class="python">
-                
-def align_pyramid(img, level=4):
-    if(type(img) == str):
-        img = skio.imread(img, as_gray=True)
-        img = sk.img_as_float(img)
 
-    raw_b, raw_g, raw_r = channel_division(img)
-
-    ## edge filter
-    b, g, r = sk.filters.roberts(raw_b), sk.filters.roberts(raw_g), sk.filters.roberts(raw_r)
-    
-    # rest of the alignment logic ...
-            
-            </code>
-            </pre>
         <div class="container">
             <div class="image-block">
                 <img src="output/emir-no-roberts.jpg">
